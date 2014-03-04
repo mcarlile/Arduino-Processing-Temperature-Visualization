@@ -7,6 +7,9 @@ float numFloat;
 int time;
 int counter = 60;
 int wait = 1000;
+int sizeMultiplier = 3;
+float exponent = 1.1; 
+float sizer;
 
 float y = 1;
 float targetRadiusMin = 83;
@@ -18,18 +21,26 @@ String player1FeedbackMessage;
 
 ControlP5 cp5;
 Slider2D s;
-float player1 = 100;
+float player1 = 0;
 int sliderTicks1 = 100;
 int sliderTicks2 = 30;
 Slider abc;
 
 
 void setup() {
+  if (player1 >= targetRadiusMax) {
+    exponent = 3;
+  } 
+  else {
+    exponent = 1.1;
+  }
+
+
   String portName = Serial.list()[5];
   myPort = new Serial(this, portName, 9600);
   myPort.bufferUntil(10);
   time = millis();//store the current time
-  size (600, 400);
+  size (displayWidth, displayHeight);
   cp5 = new ControlP5(this);
   //create player1 temperature slider
   //  cp5.addSlider("player1")
@@ -50,6 +61,9 @@ void serialEvent(Serial p) {
 }
 
 void draw () {
+
+  sizer = (pow(player1, exponent) * sizeMultiplier);
+  println(sizer);
   background(0);
   noStroke();
   y = y + second();
@@ -70,7 +84,9 @@ void draw () {
       startTime = millis();
     }
     fill(255, 0, 0, 256);
-    ellipse (width/2, height/2, (player1*3), (player1*3));
+    //    ellipse (width/2, height/2, (player1*sizeMultiplier), (player1*sizeMultiplier));
+    ellipse (width/2, height/2, (sizer), (sizer));
+
     player1FeedbackMessage = "temperature outside acceptable range";
   }   
   else {
@@ -83,7 +99,8 @@ void draw () {
     }
     fill(0, 255, 0, 255);
     player1FeedbackMessage = "temperature within acceptable range";
-    ellipse (width/2, height/2, (player1*3), (player1*3));
+    //    ellipse (width/2, height/2, (player1^sizeMultiplier), (player1*sizeMultiplier));
+    ellipse (width/2, height/2, (sizer), (sizer));
   }
   textAlign(CENTER, CENTER);
   fill(255);
@@ -92,17 +109,19 @@ void draw () {
   text("current temperature: " + player1, width/2, 375); 
   text("Player 1 score: " + player1score, width/2, 45); 
   text("Seconds remaining: " + counter, width/2, 20); 
+  text("sizer: " + sizer, width/2, 75); 
+
 
   //  //minimum range indicator
   fill(0, 0, 0, 0);
   strokeWeight(1);
   stroke(255);
-  ellipse (width/2, height/2, (targetRadiusMin *3), (targetRadiusMin *3));
+  ellipse (width/2, height/2, (targetRadiusMin *sizeMultiplier), (targetRadiusMin *sizeMultiplier));
 
   //    //maximum range indicator
   fill(0, 0, 0, 0);
   strokeWeight(1);
   stroke(255);
-  ellipse (width/2, height/2, (targetRadiusMax *3), (targetRadiusMax *3));
+  ellipse (width/2, height/2, (targetRadiusMax *sizeMultiplier), (targetRadiusMax *sizeMultiplier));
 }
 

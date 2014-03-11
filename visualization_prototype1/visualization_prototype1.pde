@@ -5,15 +5,16 @@ Serial myPort;  // Create object from Serial class
 String inString;      // Data received from the serial port
 float numFloat; 
 int time;
-int counter0 = 3;
-int counter1 = 7;
+int counter0 = 5;
+int counter1 = 50;
 int counter2 = 3;
+float greenValue = 255;
 
 int wait = 1000;
 int sizeMultiplier = 3;
 float exponent = 1.1; 
 float sizer;
-float radius = 500;
+float radius = 4; // not really radius, should be refactored to something more appropriate
 float scaledRadius = 0;
 float scaledMin;
 float scaledMax;
@@ -38,9 +39,24 @@ float player1 = 82.5;
 int sliderTicks1 = 100;
 int sliderTicks2 = 30;
 Slider abc;
-float smoother = 0;
+float smoother = 85;
+
+PImage title1;
+PImage nestEggBackground;
+PFont chickenScratch;
+
+
+
 
 void setup() {
+  title1 = loadImage("title1.png");
+  nestEggBackground = loadImage("eggbackground.png");
+
+  String[] fontList = PFont.list();
+  println(fontList);
+  chickenScratch = createFont("ChickenScratchAOE", 32);
+  textFont(chickenScratch);
+
   if (player1 >= targetRadiusMax) {
     exponent = 3;
   } 
@@ -57,18 +73,18 @@ void setup() {
   cp5 = new ControlP5(this);
 
   //create player1 temperature slider
-  cp5.addSlider("player1")
-    .setPosition(width/2, height/4)
-      .setRange(70, 100)
-        ;
-  smooth();
+  //  cp5.addSlider("player1")
+  //    .setPosition(width/2, height/4)
+  //      .setRange(70, 100)
+  //        ;
+  //  smooth();
 }
 
 void serialEvent(Serial p) {
   inString = (p.readString());
   try {
     numFloat = Float.parseFloat(inString);
-    //    player1 = abs(numFloat);
+    player1 = abs(numFloat);
     //player1 = player1 * 0.95f + abs(numFloat) * 0.05f;
   } 
   catch(Exception e) {
@@ -78,8 +94,11 @@ void serialEvent(Serial p) {
 void draw () {
 
   if (round1begin == false) {
-    background(0);
-    fill(255);
+    background(255);
+    fill(0);
+    imageMode(CENTER);
+    image(title1, width/2, height/2, width, height);    
+
     y = y + second();
     int s = second();
     if (millis() - time >= wait) { //every second
@@ -91,15 +110,16 @@ void draw () {
       }
       time = millis();//also update the stored time
 
-      textSize(18);
+      textSize(48);
     }
+
+    text("Player 1, prepare to incubate in: " + counter0, 80, ((height/4)*3));
 
     currTime = millis() - startTime;
     if ( currTime >= hitTime )
     {
       startTime = millis();
     }
-    text("Player 1, prepare to incubate in: " + counter0, width/2, height/2);
   }
 
 
@@ -108,15 +128,15 @@ void draw () {
 
   //round1 code
   if ((counter1 > 0) && (round1begin == true) && (round1over != true)) {
+
     //    scaledRadius = (radius * Scaling((smoother - targetRadiusMin)/(targetRadiusMax - targetRadiusMin)));
-    scaledRadius = (radius * ((smoother - targetRadiusMin)/(targetRadiusMax - targetRadiusMin)));
-    scaledMin = targetRadiusMin;
-    scaledMax = targetRadiusMax;
+    //    scaledRadius = (radius * ((smoother - targetRadiusMin)/(targetRadiusMax - targetRadiusMin)));
+    scaledRadius = (smoother * radius);
+    scaledMin = targetRadiusMin * radius;
+    scaledMax = targetRadiusMax * radius;
 
-
-    sizer = (pow(player1, exponent) * sizeMultiplier);
-    println(sizer);
-    background(0);
+    background(255);
+    image(nestEggBackground, width/2, height/2, width, height);    
     noStroke();
     y = y + second();
     int s = second();
@@ -127,7 +147,6 @@ void draw () {
       if (counter1 < 1) {
         round1over = true;
       }
-      println(counter1);//
       time = millis();//also update the stored time
     }
 
@@ -141,43 +160,37 @@ void draw () {
     //player out of range
     if ((smoother < targetRadiusMin) || (smoother > targetRadiusMax)) {
       fill(255, 0, 0, 255); //red
-      player1FeedbackMessage = "temperature outside acceptable range";
     } 
     else {
-      fill(0, 255, 0, 255); //green
-      player1FeedbackMessage = "temperature inside acceptable range";
+      fill(255, 255, 0, 255); //yellow
       player1score++;
     }
 
     //    ellipse (width/2, height/2, (scaledRadius), (scaledRadius));
     ellipse (width/2, height/2, (scaledRadius), (scaledRadius));
+    println ("Scaled radius: " + scaledRadius);
 
     textAlign(CENTER, CENTER);
     fill(255);
-    text(player1FeedbackMessage, width/2, 350);
-    textSize(18);
-    text("current temperature: " + player1, width/2, 375); 
-    text("Player 1 score: " + player1score, width/2, 45); 
+    textSize(36);
+    text(player1, width/2, width/2); 
+
+    //    text("current temperature: " + player1, width/2, 400); 
+    text("Player 1 score: " + player1score, width/2, 70); 
     text("Seconds remaining: " + counter1, width/2, 20); 
 
 
     //  //minimum range indicator
     fill(0, 0, 0, 0);
     strokeWeight(1);
-    stroke(255);
+    stroke(0);
     ellipse (width/2, height/2, (scaledMin), (scaledMin));
 
     //    //maximum range indicator
     fill(0, 0, 0, 0);
     strokeWeight(1);
-    stroke(255);
+    stroke(0);
     ellipse (width/2, height/2, (scaledMax), (scaledMax));
-
-    //radius indicator
-    fill(0, 0, 0, 0);
-    strokeWeight(3);
-    stroke(255);
-    ellipse (width/2, height/2, (radius), (radius));
 
     //smoothing code
     smoother = smoother * 0.95f + player1 * 0.05f;
@@ -189,7 +202,7 @@ void draw () {
   //message between rounds
   if ((round1over == true) && (round2begin != true)) {
     background(0);
-    fill(255);
+    fill(0);
     y = y + second();
     int s = second();
     if (millis() - time >= wait) { //every second
@@ -201,7 +214,7 @@ void draw () {
       }
       time = millis();//also update the stored time
 
-      textSize(18);
+      textSize(36);
     }
 
     currTime = millis() - startTime;
@@ -209,7 +222,8 @@ void draw () {
     {
       startTime = millis();
     }
-    text("Player 1, prepare to incubate in: " + counter2, width/2, height/2);
+    text("Player 2, prepare to incubate in: " + counter2, width/2, height/2);
+    text("Score to beat: " + player1score, width/2, height/2 + 50);
   }
 }
 

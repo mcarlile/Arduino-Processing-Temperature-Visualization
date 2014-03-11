@@ -6,7 +6,9 @@ String inString;      // Data received from the serial port
 float numFloat; 
 int time;
 int counter0 = 5;
-int counter1 = 50;
+int counterDefinition = 10;
+
+int counter1 = 5;
 int counter2 = 3;
 float greenValue = 255;
 
@@ -14,7 +16,7 @@ int wait = 1000;
 int sizeMultiplier = 3;
 float exponent = 1.1; 
 float sizer;
-float radius = 4; // not really radius, should be refactored to something more appropriate
+float radius = 5; // not really radius, should be refactored to something more appropriate
 float scaledRadius = 0;
 float scaledMin;
 float scaledMax;
@@ -26,8 +28,13 @@ float extremeRadiusMax = 95;
 float player1score = 0;
 float startTime, currTime;
 float hitTime;
-String player1FeedbackMessage;
 
+String player1FeedbackMessage;
+String definition;
+String subtitle;
+
+boolean round0end = false;
+boolean tutorialBegin = false;
 boolean round1begin = false;
 boolean round1over = false;
 boolean round2over = false;
@@ -45,17 +52,15 @@ PImage title1;
 PImage nestEggBackground;
 PFont chickenScratch;
 
-
-
-
 void setup() {
   title1 = loadImage("title1.png");
   nestEggBackground = loadImage("eggbackground.png");
-
-  String[] fontList = PFont.list();
-  println(fontList);
   chickenScratch = createFont("ChickenScratchAOE", 32);
   textFont(chickenScratch);
+  subtitle = "/ ˈbrü-de / ";
+  definition = "being in a state of readiness to brood eggs that is characterized by cessation of laying and by marked changes in behavior and physiology.";
+
+
 
   if (player1 >= targetRadiusMax) {
     exponent = 3;
@@ -93,7 +98,7 @@ void serialEvent(Serial p) {
 
 void draw () {
 
-  if (round1begin == false) {
+  if ((round1begin == false) && (round0end == false)) {
     background(255);
     fill(0);
     imageMode(CENTER);
@@ -106,13 +111,12 @@ void draw () {
         counter0--;
       }
       if (counter0 < 1) {
-        round1begin = true;
+        tutorialBegin = true;
+        round0end = true;
       }
       time = millis();//also update the stored time
-
-      textSize(48);
     }
-
+    textSize(48);
     text("Player 1, prepare to incubate in: " + counter0, 80, ((height/4)*3));
 
     currTime = millis() - startTime;
@@ -122,7 +126,41 @@ void draw () {
     }
   }
 
+  if (tutorialBegin == true) {
+    background(0);
+    println (counterDefinition);
+    y = y + second();
+    int s = second();
+    if (millis() - time >= wait) { //every second
 
+
+      if ((counterDefinition <= 10) && (counterDefinition >= 1)) {
+        counterDefinition--;
+        subtitle = "how to win";
+        definition = "keep your eggs within 83 and 85 degrees so they can incubate properly! the player (bird) who keeps their eggs within the nominal range more often is the winner.";
+      }
+
+      if (counterDefinition < 1) {
+        round1begin = true;
+      }
+      time = millis();//also update the stored time
+    }
+
+
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(48);
+    text(subtitle, width/2, height/2);
+    textSize(36);
+    textAlign(LEFT, LEFT);
+    text(definition, width/4, height/2+50, width/2, 300);  // Text wraps within text box
+
+    currTime = millis() - startTime;
+    if ( currTime >= hitTime )
+    {
+      startTime = millis();
+    }
+  }
 
 
 
@@ -160,7 +198,7 @@ void draw () {
     //player out of range
     if ((smoother < targetRadiusMin) || (smoother > targetRadiusMax)) {
       fill(255, 0, 0, 255); //red
-    } 
+    }
     else {
       fill(255, 255, 0, 255); //yellow
       player1score++;
@@ -168,16 +206,22 @@ void draw () {
 
     //    ellipse (width/2, height/2, (scaledRadius), (scaledRadius));
     ellipse (width/2, height/2, (scaledRadius), (scaledRadius));
-    println ("Scaled radius: " + scaledRadius);
+
 
     textAlign(CENTER, CENTER);
+    fill(0);
+    textSize(72);
+    textAlign(LEFT, CENTER);
+    text("Seconds remaining: " + counter1, 30, 30); 
+    textAlign(RIGHT, CENTER);
+    text("Player 1 score:  " + player1score, width-30, 30); 
     fill(255);
-    textSize(36);
-    text(player1, width/2, width/2); 
+    textAlign(CENTER, CENTER);
+    textSize(100);
+    text(player1, width/2, height/2); 
 
     //    text("current temperature: " + player1, width/2, 400); 
-    text("Player 1 score: " + player1score, width/2, 70); 
-    text("Seconds remaining: " + counter1, width/2, 20); 
+
 
 
     //  //minimum range indicator
@@ -196,13 +240,9 @@ void draw () {
     smoother = smoother * 0.95f + player1 * 0.05f;
   }
 
-
-
-
   //message between rounds
   if ((round1over == true) && (round2begin != true)) {
     background(0);
-    fill(0);
     y = y + second();
     int s = second();
     if (millis() - time >= wait) { //every second
@@ -213,8 +253,6 @@ void draw () {
         round2begin = true;
       }
       time = millis();//also update the stored time
-
-      textSize(36);
     }
 
     currTime = millis() - startTime;
@@ -222,22 +260,18 @@ void draw () {
     {
       startTime = millis();
     }
-    text("Player 2, prepare to incubate in: " + counter2, width/2, height/2);
+    fill(255);
+    textSize(36);
+    text("Player 2, prepare to incubate in:" + counter2, width/2, height/2);
     text("Score to beat: " + player1score, width/2, height/2 + 50);
   }
 }
 
-float Scaling (float x) {
-  if (x<=0) {
-    return 0;
-  } 
-  else if ((x>0) && (x<= (1/2f))) {
-    return (float)(sq(x-2)/2f);
-  } 
-  else if ((x>(1/2f)) && (x<= 1)) {
-    return (float)(( sqrt((x+(1/2f))*2)/2f) + (1/2f));
-  }
-  else
-    return (float)1;
-}
+//float Scaling (float x) {
+//  if (x<=0) {
+//    return 0;
+//  } 
+//  else if ((x>0) && (x<= (1/2f))) {
+//    return (float)(sq(x-2)/2f);
+//  } 
 

@@ -5,13 +5,16 @@ Serial myPort;  // Create object from Serial class
 String inString;      // Data received from the serial port
 float numFloat; 
 int time;
-int counter = 100;
+int counter0 = 3;
+int counter1 = 7;
+int counter2 = 3;
+
 int wait = 1000;
 int sizeMultiplier = 3;
 float exponent = 1.1; 
 float sizer;
-float radius = 1000;
-float scaledRadius;
+float radius = 500;
+float scaledRadius = 0;
 float scaledMin;
 float scaledMax;
 
@@ -24,6 +27,7 @@ float startTime, currTime;
 float hitTime;
 String player1FeedbackMessage;
 
+boolean round1begin = false;
 boolean round1over = false;
 boolean round2over = false;
 boolean round2begin = false;
@@ -54,7 +58,7 @@ void setup() {
 
   //create player1 temperature slider
   cp5.addSlider("player1")
-    .setPosition(width/2, height/2)
+    .setPosition(width/2, height/4)
       .setRange(70, 100)
         ;
   smooth();
@@ -72,7 +76,38 @@ void serialEvent(Serial p) {
 }
 
 void draw () {
-  if ((counter > 0) && (round1over != true)) {
+
+  if (round1begin == false) {
+    background(0);
+    fill(255);
+    y = y + second();
+    int s = second();
+    if (millis() - time >= wait) { //every second
+      if (counter0 >= 1) {
+        counter0--;
+      }
+      if (counter0 < 1) {
+        round1begin = true;
+      }
+      time = millis();//also update the stored time
+
+      textSize(18);
+    }
+
+    currTime = millis() - startTime;
+    if ( currTime >= hitTime )
+    {
+      startTime = millis();
+    }
+    text("Player 1, prepare to incubate in: " + counter0, width/2, height/2);
+  }
+
+
+
+
+
+  //round1 code
+  if ((counter1 > 0) && (round1begin == true) && (round1over != true)) {
     //    scaledRadius = (radius * Scaling((smoother - targetRadiusMin)/(targetRadiusMax - targetRadiusMin)));
     scaledRadius = (radius * ((smoother - targetRadiusMin)/(targetRadiusMax - targetRadiusMin)));
     scaledMin = targetRadiusMin;
@@ -86,13 +121,13 @@ void draw () {
     y = y + second();
     int s = second();
     if (millis() - time >= wait) { //every second
-      if (counter >= 1) {
-        counter--;
+      if (counter1 >= 1) {
+        counter1--;
       }
-      if (counter < 1) {
+      if (counter1 < 1) {
         round1over = true;
       }
-      println(counter);//
+      println(counter1);//
       time = millis();//also update the stored time
     }
 
@@ -117,16 +152,13 @@ void draw () {
     //    ellipse (width/2, height/2, (scaledRadius), (scaledRadius));
     ellipse (width/2, height/2, (scaledRadius), (scaledRadius));
 
-
-
-
     textAlign(CENTER, CENTER);
     fill(255);
     text(player1FeedbackMessage, width/2, 350);
     textSize(18);
     text("current temperature: " + player1, width/2, 375); 
     text("Player 1 score: " + player1score, width/2, 45); 
-    text("Seconds remaining: " + counter, width/2, 20); 
+    text("Seconds remaining: " + counter1, width/2, 20); 
 
 
     //  //minimum range indicator
@@ -151,11 +183,33 @@ void draw () {
     smoother = smoother * 0.95f + player1 * 0.05f;
   }
 
-  if (round1over == true) {
+
+
+
+  //message between rounds
+  if ((round1over == true) && (round2begin != true)) {
     background(0);
     fill(255);
-    text("Time's Up! Player 1's score to beat is: " + player1score, width/2, height/2);
-    round2begin = true;
+    y = y + second();
+    int s = second();
+    if (millis() - time >= wait) { //every second
+      if (counter2 >= 1) {
+        counter2--;
+      }
+      if (counter2 < 1) {
+        round2begin = true;
+      }
+      time = millis();//also update the stored time
+
+      textSize(18);
+    }
+
+    currTime = millis() - startTime;
+    if ( currTime >= hitTime )
+    {
+      startTime = millis();
+    }
+    text("Player 1, prepare to incubate in: " + counter2, width/2, height/2);
   }
 }
 
